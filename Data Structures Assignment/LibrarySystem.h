@@ -5,11 +5,12 @@ const int MAX = 5000;
 
 struct GameCopy {
     int copyId;
-    std::string title;
-    std::string category;
-    int playersMin;
-    int playersMax;
-    int year;
+    std::string name;        // CSV: name
+    int minPlayers;          // CSV: minplayers
+    int maxPlayers;          // CSV: maxplayers
+    int maxPlayTime;         // CSV: maxplaytime
+    int minPlayTime;         // CSV: minplaytime
+    int yearPublished;       // CSV: yearpublished
     bool isBorrowed;
 };
 
@@ -51,7 +52,6 @@ public:
     LibrarySystem();
     ~LibrarySystem();
 
-    // prevent copying (raw pointers)
     LibrarySystem(const LibrarySystem&) = delete;
     LibrarySystem& operator=(const LibrarySystem&) = delete;
 
@@ -59,8 +59,11 @@ public:
     void loadGamesFromCSV(const std::string& filename);
 
     // admin actions
-    void addGame();        // add N copies
+    void addGame();        // add N copies (manual input)
     void removeGame();     // remove by copyId (if not borrowed)
     void addMember();
     void showSummary() const;
+
+    // testing / display
+    void displayAllGames() const; // shows first 10
 };

@@ -93,39 +93,37 @@ void LibrarySystem::loadGamesFromCSV(const std::string& filename) {
         game.isBorrowed = false;
         game.copyId = nextCopyId++;
 
-        // Defaults (in case fields are missing)
-        game.title = "";
-        game.category = "";
-        game.playersMin = 0;
-        game.playersMax = 0;
-        game.year = 0;
+        // Defaults
+        game.name = "";
+        game.minPlayers = 0;
+        game.maxPlayers = 0;
+        game.maxPlayTime = 0;
+        game.minPlayTime = 0;
+        game.yearPublished = 0;
 
         int field = 0;
 
-        // Parse CSV line by comma
         while (std::getline(ss, token, ',')) {
             token = trim(token);
 
-            // Remove surrounding quotes if present
+            // Remove surrounding quotes
             if (token.size() >= 2 && token.front() == '"' && token.back() == '"') {
                 token = token.substr(1, token.length() - 2);
             }
 
             switch (field) {
-            case 0: game.title = token; break;                  // Title
-            case 1: game.category = token; break;               // Category
-            case 2: game.playersMin = toIntSafe(token); break;  // Players Min
-            case 3: game.playersMax = toIntSafe(token); break;  // Players Max
-            case 4: game.year = toIntSafe(token); break;        // Year
+            case 0: game.name = token; break;                   // name
+            case 1: game.minPlayers = toIntSafe(token); break;  // minplayers
+            case 2: game.maxPlayers = toIntSafe(token); break;  // maxplayers
+            case 3: game.maxPlayTime = toIntSafe(token); break; // maxplaytime
+            case 4: game.minPlayTime = toIntSafe(token); break; // minplaytime
+            case 5: game.yearPublished = toIntSafe(token); break;// yearpublished
             default: break;
             }
             field++;
         }
 
-        if (game.title.empty()) {
-            // skip bad/empty rows
-            continue;
-        }
+        if (trim(game.name).empty()) continue;
 
         if (gameCount < MAX) {
             games[gameCount++] = game;
@@ -142,28 +140,31 @@ void LibrarySystem::loadGamesFromCSV(const std::string& filename) {
 }
 
 void LibrarySystem::addGame() {
-    std::string title, category;
-    int pmin = 0, pmax = 0, year = 0, copies = 0;
+    std::string name;
+    int pmin = 0, pmax = 0, minTime = 0, maxTime = 0, year = 0, copies = 0;
 
-    std::cout << "Title: ";
-    std::getline(std::cin >> std::ws, title);
+    std::cout << "Name: ";
+    std::getline(std::cin >> std::ws, name);
 
-    std::cout << "Category: ";
-    std::getline(std::cin, category);
-
-    std::cout << "Players min: ";
+    std::cout << "Min Players: ";
     if (!(std::cin >> pmin)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
 
-    std::cout << "Players max: ";
+    std::cout << "Max Players: ";
     if (!(std::cin >> pmax)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
 
-    std::cout << "Year: ";
+    std::cout << "Min Play Time: ";
+    if (!(std::cin >> minTime)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
+
+    std::cout << "Max Play Time: ";
+    if (!(std::cin >> maxTime)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
+
+    std::cout << "Year Published: ";
     if (!(std::cin >> year)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
 
     std::cout << "Number of copies to add: ";
     if (!(std::cin >> copies)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
 
-    if (trim(title).empty() || copies <= 0) {
+    if (trim(name).empty() || copies <= 0) {
         std::cout << "Invalid input.\n";
         return;
     }
@@ -176,11 +177,12 @@ void LibrarySystem::addGame() {
 
         GameCopy g;
         g.copyId = nextCopyId++;
-        g.title = title;
-        g.category = category;
-        g.playersMin = pmin;
-        g.playersMax = pmax;
-        g.year = year;
+        g.name = name;
+        g.minPlayers = pmin;
+        g.maxPlayers = pmax;
+        g.minPlayTime = minTime;
+        g.maxPlayTime = maxTime;
+        g.yearPublished = year;
         g.isBorrowed = false;
 
         games[gameCount++] = g;
@@ -259,17 +261,26 @@ void LibrarySystem::showSummary() const {
     std::cout << "Total borrow transactions: " << loanCount << "\n";
     std::cout << "Total returned: " << returnedCount << "\n";
     std::cout << "Currently borrowed: " << activeCount << "\n";
+    std::cout << "==============\n\n";
+}
 
-    if (activeCount > 0) {
-        std::cout << "\nCurrently borrowed list:\n";
-        for (int i = 0; i < loanCount; i++) {
-            if (!loans[i].returned) {
-                std::cout << "copyId " << loans[i].copyId
-                    << ", memberId " << loans[i].memberId
-                    << ", borrowDate " << loans[i].borrowDate << "\n";
-            }
-        }
+void LibrarySystem::displayAllGames() const {
+    std::cout << "\n=== All Games (" << gameCount << " total) ===\n";
+
+    int displayCount = (gameCount < 10) ? gameCount : 10;
+
+    for (int i = 0; i < displayCount; i++) {
+        std::cout << "ID: " << games[i].copyId
+            << " | Name: " << games[i].name
+            << " | Players: " << games[i].minPlayers << "-" << games[i].maxPlayers
+            << " | Time: " << games[i].minPlayTime << "-" << games[i].maxPlayTime
+            << " | Year: " << games[i].yearPublished
+            << "\n";
     }
 
-    std::cout << "==============\n\n";
+    if (gameCount > 10) {
+        std::cout << "... and " << (gameCount - 10) << " more games.\n";
+    }
+
+    std::cout << "=================\n\n";
 }
