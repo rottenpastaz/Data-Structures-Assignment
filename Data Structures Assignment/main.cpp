@@ -10,10 +10,8 @@ static void clearInputLine() {
 int main() {
     LibrarySystem sys;
 
-    // IMPORTANT: Set the correct path to your CSV.
-    // If games.csv is in the same folder as your .exe, use "games.csv".
-    // If it's in a data folder, use "data\\games.csv".
-    sys.loadGamesFromCSV("data\\games.csv");
+    std::cout << "Loading games from CSV...\n";
+    sys.loadGamesFromCSV("data//games.csv");
 
     while (true) {
         std::cout << "Admin Menu\n";
@@ -21,6 +19,7 @@ int main() {
         std::cout << "2) Remove a board game\n";
         std::cout << "3) Add a new member\n";
         std::cout << "4) Display summary of games borrowed/returned\n";
+        std::cout << "5) Display all games (first 10)\n";
         std::cout << "0) Exit\n";
         std::cout << "Choice: ";
 
@@ -36,6 +35,7 @@ int main() {
         case 2: sys.removeGame(); break;
         case 3: sys.addMember(); break;
         case 4: sys.showSummary(); break;
+        case 5: sys.displayAllGames(); break;
         case 0: return 0;
         default: std::cout << "Invalid choice.\n"; break;
         }
