@@ -1,6 +1,9 @@
 #include "LibrarySystem.h"
 #include <iostream>
 #include <limits>
+#include <fstream>
+#include <sstream>
+#include <cctype>
 
 static void clearInputLine() {
     std::cin.clear();
@@ -21,6 +24,25 @@ LibrarySystem::~LibrarySystem() {
     delete[] games;
     delete[] members;
     delete[] loans;
+}
+
+std::string LibrarySystem::trim(const std::string& s) {
+    size_t start = 0;
+    while (start < s.size() && std::isspace(static_cast<unsigned char>(s[start]))) start++;
+    size_t end = s.size();
+    while (end > start && std::isspace(static_cast<unsigned char>(s[end - 1]))) end--;
+    return s.substr(start, end - start);
+}
+
+int LibrarySystem::toIntSafe(const std::string& s) {
+    std::string t = trim(s);
+    if (t.empty()) return 0;
+    try {
+        return std::stoi(t);
+    }
+    catch (...) {
+        return 0;
+    }
 }
 
 int LibrarySystem::findGameByCopyId(int copyId) const {
@@ -46,6 +68,79 @@ bool LibrarySystem::removeGameAtIndex(int idx) {
     return true;
 }
 
+void LibrarySystem::loadGamesFromCSV(const std::string& filename) {
+    std::ifstream file(filename);
+
+    if (!file.is_open()) {
+        std::cout << "Error: Could not open file " << filename << "\n";
+        return;
+    }
+
+    std::string line;
+
+    // Skip the header line
+    std::getline(file, line);
+
+    int loadedCount = 0;
+
+    while (std::getline(file, line)) {
+        if (trim(line).empty()) continue;
+
+        std::stringstream ss(line);
+        std::string token;
+
+        GameCopy game;
+        game.isBorrowed = false;
+        game.copyId = nextCopyId++;
+
+        // Defaults (in case fields are missing)
+        game.title = "";
+        game.category = "";
+        game.playersMin = 0;
+        game.playersMax = 0;
+        game.year = 0;
+
+        int field = 0;
+
+        // Parse CSV line by comma
+        while (std::getline(ss, token, ',')) {
+            token = trim(token);
+
+            // Remove surrounding quotes if present
+            if (token.size() >= 2 && token.front() == '"' && token.back() == '"') {
+                token = token.substr(1, token.length() - 2);
+            }
+
+            switch (field) {
+            case 0: game.title = token; break;                  // Title
+            case 1: game.category = token; break;               // Category
+            case 2: game.playersMin = toIntSafe(token); break;  // Players Min
+            case 3: game.playersMax = toIntSafe(token); break;  // Players Max
+            case 4: game.year = toIntSafe(token); break;        // Year
+            default: break;
+            }
+            field++;
+        }
+
+        if (game.title.empty()) {
+            // skip bad/empty rows
+            continue;
+        }
+
+        if (gameCount < MAX) {
+            games[gameCount++] = game;
+            loadedCount++;
+        }
+        else {
+            std::cout << "Warning: Inventory full. Loaded " << loadedCount << " games.\n";
+            break;
+        }
+    }
+
+    file.close();
+    std::cout << "Successfully loaded " << loadedCount << " games from CSV.\n";
+}
+
 void LibrarySystem::addGame() {
     std::string title, category;
     int pmin = 0, pmax = 0, year = 0, copies = 0;
@@ -68,7 +163,7 @@ void LibrarySystem::addGame() {
     std::cout << "Number of copies to add: ";
     if (!(std::cin >> copies)) { clearInputLine(); std::cout << "Invalid.\n"; return; }
 
-    if (title.empty() || copies <= 0) {
+    if (trim(title).empty() || copies <= 0) {
         std::cout << "Invalid input.\n";
         return;
     }
@@ -127,7 +222,7 @@ void LibrarySystem::addMember() {
     std::cout << "Contact: ";
     std::getline(std::cin, contact);
 
-    if (id <= 0 || name.empty()) {
+    if (id <= 0 || trim(name).empty()) {
         std::cout << "Invalid input.\n";
         return;
     }

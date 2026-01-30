@@ -10,6 +10,11 @@ static void clearInputLine() {
 int main() {
     LibrarySystem sys;
 
+    // IMPORTANT: Set the correct path to your CSV.
+    // If games.csv is in the same folder as your .exe, use "games.csv".
+    // If it's in a data folder, use "data\\games.csv".
+    sys.loadGamesFromCSV("data\\games.csv");
+
     while (true) {
         std::cout << "Admin Menu\n";
         std::cout << "1) Add new board game\n";

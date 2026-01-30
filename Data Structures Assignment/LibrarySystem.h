@@ -44,6 +44,9 @@ private:
     int findMemberById(int memberId) const;
     bool removeGameAtIndex(int idx);
 
+    static std::string trim(const std::string& s);
+    static int toIntSafe(const std::string& s);
+
 public:
     LibrarySystem();
     ~LibrarySystem();
@@ -51,6 +54,9 @@ public:
     // prevent copying (raw pointers)
     LibrarySystem(const LibrarySystem&) = delete;
     LibrarySystem& operator=(const LibrarySystem&) = delete;
+
+    // file loading
+    void loadGamesFromCSV(const std::string& filename);
 
     // admin actions
     void addGame();        // add N copies
